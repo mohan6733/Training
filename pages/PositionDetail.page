@@ -1,0 +1,5 @@
+<!-- This is a simple page that mimics a standard Position Page Layout using the Visualforce Detail tag. -->
+
+<apex:page standardController="Position__c" >
+  <apex:detail subject="{!Position__c.Id}" title="true" relatedList="true" relatedListHover="true" />
+</apex:page>

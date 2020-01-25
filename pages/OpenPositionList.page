@@ -1,0 +1,216 @@
+<apex:page controller="OpenPositionList_Controller" showHeader="false" id="thePage">  
+
+	<!-- YUI STYLE IMPORTS -->
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/datatable/assets/skins/sam/datatable.css"/>
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/paginator/assets/skins/sam/paginator.css"/>
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/assets/skins/sam/skin.css"/>
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/fonts/fonts-min.css"/>
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/button/assets/skins/sam/button.css"/>
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/container/assets/skins/sam/container.css"/>
+
+	<!-- YUI SCRIPT IMPORTS -->
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/yuiloader/yuiloader-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/event/event-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/dom/dom-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/animation/animation-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/element/element-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/container/container-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/datasource/datasource-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/datatable/datatable-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/paginator/paginator-min.js" />
+
+	<!-- OPTIONAL: Drag Drop (enables resizeable or reorderable columns) -->
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/dragdrop/dragdrop-min.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/resize/resize-min.js" />	
+	
+	<style>
+		.yui-content {}
+		.yui-content textarea {visibility: hidden;}
+		.univCont {font-family:arial;font-size:1.3em;}
+	</style>
+
+		<!-- YUI DATATABLE SCRIPTS -->
+	<script type="text/javascript">
+		
+		function Init(){
+			addTable();
+		}
+		
+		function addTable(){
+			
+			// declare local vars
+			var myDataTable = null;
+			var sectionsArr = new Array();	//create data table 
+			var sections= new Array();
+			
+			var myDataSource = new YAHOO.util.DataSource( 
+				sectionsArr,
+				{responseType: YAHOO.util.DataSource.TYPE_JSARRAY } 
+			);
+			
+			<apex:repeat value="{!OpenPositions}" var="each">
+				sections= new Array();
+				sections.push('{!each.Id}');
+				sections.push('{!each.Department__c}');
+				sections.push('{!each.Name}');
+				sections.push('{!each.Type__c}');
+				sections.push('{!each.Location__c}');					
+				sections.push('{!JSINHTMLENCODE(each.Job_Description__c)}');
+				sections.push('{!JSINHTMLENCODE(each.Skills_Required__c)}');
+				sections.push('{!JSINHTMLENCODE(each.Responsibilities__c)}');
+				sectionsArr.push(sections);
+			</apex:repeat>
+			
+			myDataSource.responseSchema = {
+				fields: [
+					{key:"Id", parser:YAHOO.util.DataSource.parseString },
+					{key:"Department__c", parser:YAHOO.util.DataSource.parseString },
+					{key:"Name", parser:YAHOO.util.DataSource.parseString},
+					{key:"Type__c", parser:YAHOO.util.DataSource.parseString},
+					{key:"Location__c", parser:YAHOO.util.DataSource.parseString},
+					{key:"Job_Description__c", parser:YAHOO.util.DataSource.parseString},
+					{key:"Skills_Required__c", parser:YAHOO.util.DataSource.parseString},
+					{key:"Responsibilities__c", parser:YAHOO.util.DataSource.parseString}
+				]
+			};			
+
+			var myColumnDefs = [
+				{key:"Id", sortable:true},
+				{key:"Department__c", sortable:true, label:"Department" },
+				{key:"Name", sortable:true, label:"Postion"},
+				{key:"Type__c", sortable:true, label:"Full / Part Time"},
+				{key:"Location__c", label:"Location", sortable:true},
+				{key:"Job_Description__c", label:"Job Description"},
+				{key:"Skills_Required__c", label:"Sills Required"},
+				{key:"Responsibilities__c", label:"Responsibilities"}
+			];
+			
+			var myConfigs = {
+				paginator : new YAHOO.widget.Paginator({
+					rowsPerPage : 5
+				}),
+				sortedBy: {key:"Department__c", dir:YAHOO.widget.DataTable.CLASS_ASC}
+			};
+			
+			myDataTable = new YAHOO.widget.DataTable("myMarkedUpContainer", myColumnDefs, myDataSource, myConfigs);			
+
+			// for row selection
+			var myOnRowSelectHandler = function( oArgs ) {
+				document.getElementById("{!$Component.thePage.theForm.jobIdAppliedFor}").value = this.getRecord(oArgs.target).getData('Id');
+				YAHOO.simpledialog1.setHeader("Position Detail - " + this.getRecord(oArgs.target).getData('Name'));
+				YAHOO.simpledialog1.setBody(getPositionDetailHTML(this.getRecord(oArgs.target)));
+				YAHOO.simpledialog1.show();
+			};
+			
+			// event handlers
+			myDataTable.set("selectionMode","single"); 
+			myDataTable.subscribe("rowClickEvent", myOnRowSelectHandler);
+			myDataTable.subscribe("cellClickEvent", myDataTable.onEventSelectRow);
+			
+			// hide the necessary columns 
+			myDataTable.hideColumn(myDataTable.getColumn(0));
+			myDataTable.hideColumn(myDataTable.getColumn(6));
+			myDataTable.hideColumn(myDataTable.getColumn(7));
+			 
+			
+			//start tooltip 
+			myTooltip = new YAHOO.widget.Tooltip("myTooltip", {  
+					context:"myMarkedUpContainer",  
+					text:"Click on a position to review additional details and apply.", 
+					showDelay:500 } ); 			
+			
+		}
+		
+		
+		function getPositionDetailHTML(positionRecord) {
+			
+			// declare the return var
+			var outputHTML = "<table border=\'0\' cellspacing=\'5\'>";
+			
+			// add the content
+			outputHTML += "<tr valign=\'top\'><td><b>Position</b></td><td>" + positionRecord.getData('Name') + "</td></tr>";  
+			outputHTML += "<tr valign=\'top\'><td><b>Department</b></td><td>" + positionRecord.getData('Department__c') + "</td></tr>";
+			outputHTML += "<tr valign=\'top\'><td><b>Location</b></td><td>" + positionRecord.getData('Location__c') + "</td></tr>";
+			outputHTML += "<tr valign=\'top\'><td><b>Type</b></td><td>" + positionRecord.getData('Type__c') + "</td></tr>";
+			outputHTML += "<tr valign=\'top\'><td><b>Job Description</b></td><td>" + positionRecord.getData('Job_Description__c') + "</td></tr>";
+			outputHTML += "<tr valign=\'top\'><td><b>Responsibilities</b></td><td>" + positionRecord.getData('Responsibilities__c') + "</td></tr>";
+			outputHTML += "<tr valign=\'top\'><td><b>Skills Required</b></td><td>" + positionRecord.getData('Skills_Required__c') + "</td></tr>";
+
+			outputHTML += "</table>";
+
+			return outputHTML;
+		}
+		
+		
+		function initModalDiag() {
+	
+			// Define various event handlers for Dialog
+			var handleYes = function() {
+				this.hide();
+				window.top.location = "{!$Page.OpenPositionListApply}?posid=" + document.getElementById("{!$Component.thePage.theForm.jobIdAppliedFor}").value;
+			};
+			var handleNo = function() {
+				this.hide();
+			};
+ 
+			// Instantiate the Dialog
+			YAHOO.simpledialog1 = new YAHOO.widget.SimpleDialog("simpledialog1", 
+				 { width: "500px",
+				   fixedcenter: true,
+				   visible: false,
+				   draggable: false,
+				   close: false,
+				   modal: true,
+				   text: "",
+				   icon: YAHOO.widget.SimpleDialog.ICON_HELP,
+				   constraintoviewport: true,
+				   buttons: [ { text:"Apply?", handler:handleYes, isDefault:true },
+							  { text:"Return to List",  handler:handleNo } ],
+					effect          :   {
+                    	effect:YAHOO.widget.ContainerEffect.FADE,
+                        duration:0.35
+                   	} 							  
+				 } );
+	
+			YAHOO.simpledialog1.setHeader("Position Detail");
+	
+			// Render the Dialog
+			YAHOO.simpledialog1.render("container");
+		}
+		
+		YAHOO.util.Event.onDOMReady(Init); 
+		
+		YAHOO.util.Event.addListener(window, "load", initModalDiag);
+		
+	</script>
+	
+	<body class="yui-skin-sam">
+		<br />		
+		<table border="0">
+			<tr>
+				<td>
+					<apex:image id="theImage" value="{!$Resource.corporate_logo}" />
+				</td>
+				<td class="univCont" >
+					Headquartered in San Francisco, Universal Containers is a global company with more than 1,000 employees in offices around the world.  From quality engineers in San Francisco to account executives in Sydney, there are a variety of career opportunities in our many locations.
+				</td>
+			</tr>
+		</table>
+		
+		<br /><br />
+		Hello {!$User.FirstName} {!$User.LastName}, please find the current list of open positions below.  Click on any entry for additional information and to apply.
+		<br /><br />
+		
+		<!-- YUI DATA TABLE EXPERIMENT -->
+		<apex:form styleClass="yui-skin-sam" id="theForm">
+			<apex:inputHidden value="{!jobIdAppliedFor}" id="jobIdAppliedFor"/>
+			<div id="myMarkedUpContainer"></div>
+		</apex:form>
+		
+		
+		<!-- This is the content of the modal dialog -->
+		<div id="container"></div>
+		
+	</body>
+</apex:page>

@@ -1,0 +1,57 @@
+<apex:page showHeader="false" id="thePage" controller="OpenPositionListApply_Controller" action="{!ApplyForOpenPosition}">
+ 
+	<!-- YUI STYLE IMPORTS -->
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/fonts/fonts-min.css"/>
+	<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/button/assets/skins/sam/button.css"/>
+
+	<!-- YUI SCRIPT IMPORTS -->
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js" />
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/element/element-min.js" />  
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/yui/2.7.0/build/button/button-min.js" />
+  
+	<style>
+		.yui-content {}
+		.yui-content textarea {visibility: hidden;}
+		.univCont {font-family:arial;font-size:1.3em;}
+		table { 
+			margin-left: auto;
+			margin-right: auto;
+		}
+	</style>
+
+	<script type="text/javascript">	
+		    
+		    function Init(){
+			    var oButton = new YAHOO.widget.Button("{!$Component.thePage.theForm.theButton}");
+			}
+		    
+		    YAHOO.util.Event.onDOMReady(Init); 	
+		    
+	</script>
+
+	<body class="yui-skin-sam">
+		<br />		
+		<apex:form styleClass="yui-skin-sam" id="theForm">
+			<table border="0" width="50%">
+				<tr>
+					<td align="center">
+						<apex:image id="theImage" value="{!$Resource.corporate_logo}" />
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td align="center" colspan="2" class="univCont">
+						<br /><br />
+						Congratulations {!$User.FirstName} {!$User.LastName} and thank you for your interest in Universal Containers!  Our hiring managers are reviewing your application and will be in touch very soon.
+						<br /><br />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" align="center">
+						<apex:commandButton action="{!returnToList}" value="Return to Open Position List" id="theButton"/>	
+					</td>
+				</tr>
+			</table>
+		</apex:form>
+	</body>
+</apex:page>
